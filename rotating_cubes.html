@@ -1,0 +1,61 @@
+<html>
+  <head>
+  <title>Three.js HoloPyramid</title>
+  <style>
+    body {
+      margin: 0px;
+      background-color: #000000;
+      overflow: hidden;
+    }
+  </style>
+  </head>
+
+  <body>
+    <script src="three.min.js"></script>
+    <script>
+     var scene = new THREE.Scene();
+     var camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 1, 1000);
+     camera.position.z = 400;
+
+     var renderer = new THREE.WebGLRenderer();
+     renderer.setSize(window.innerWidth, window.innerHeight);
+     renderer.setPixelRatio( window.devicePixelRatio );
+     document.body.appendChild(renderer.domElement);
+
+     var geometry = new THREE.BoxGeometry(window.innerWidth/16, window.innerWidth/16, window.innerWidth/16);
+
+     // create new material for each face
+     var materials = [
+          new THREE.MeshBasicMaterial({color: 0x00ffff}),
+          new THREE.MeshBasicMaterial({color: 0xff00ff}),
+          new THREE.MeshBasicMaterial({color: 0xffff00}),
+          new THREE.MeshBasicMaterial({color: 0x0000ff}),
+          new THREE.MeshBasicMaterial({color: 0x00ff00}),
+          new THREE.MeshBasicMaterial({color: 0xff0000})    
+     ];
+
+     var cubes = [];
+     for(i = 1; i<=4; i++) {
+       cubes[i] = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(materials));
+       if(i==1) cubes[i].position.set(-window.innerWidth/4, 0, 10);
+       if(i==2) cubes[i].position.set(0, window.innerHeight/4, 10);
+       if(i==3) cubes[i].position.set(window.innerWidth/4, 0, 10);
+       if(i==4) cubes[i].position.set(0, -window.innerHeight/4, 10);
+       scene.add(cubes[i]);
+     }
+
+     function render() {
+       requestAnimationFrame(render);
+
+       for(j = 1; j<=4; j++) {
+         cubes[j].rotation.x += 0.01;
+         cubes[j].rotation.y += 0.01;
+       }
+
+       renderer.render(scene, camera);
+     };
+
+     render();
+    </script>
+  </body>
+</html>
