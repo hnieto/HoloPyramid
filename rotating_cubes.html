@@ -1,5 +1,6 @@
 <html>
   <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Three.js HoloPyramid</title>
   <style>
     body {
@@ -37,9 +38,9 @@
      var cubes = [];
      for(i = 1; i<=4; i++) {
        cubes[i] = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(materials));
-       if(i==1) cubes[i].position.set(-window.innerWidth/4, 0, 10);
+       if(i==1) cubes[i].position.set(-window.innerHeight/4, 0, 10);
        if(i==2) cubes[i].position.set(0, window.innerHeight/4, 10);
-       if(i==3) cubes[i].position.set(window.innerWidth/4, 0, 10);
+       if(i==3) cubes[i].position.set(window.innerHeight/4, 0, 10);
        if(i==4) cubes[i].position.set(0, -window.innerHeight/4, 10);
        scene.add(cubes[i]);
      }
