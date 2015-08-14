@@ -1,0 +1,206 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Three.js HoloPyramid</title>
+    <style>
+      body{margin: 0; padding: 0px; background-color: black;}
+      #container { margin: 0 auto;}
+      canvas {width: 100%; height: 100%; background-color: black;}
+    </style>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="three.min.js"></script>
+    <script src="leap.min.js"></script>
+    <script src="AnaglyphEffect.js"></script>
+  </head>
+  <body>
+    <div id="container"></div>
+    <script>
+
+		//create views
+		var views = [
+			{ 
+				left: 0,
+				bottom: 0.5,
+				width: 0.5,
+				height: 0.5,
+				background: { r: 0.0, g: 0.0, b: 0.0, a: 1 },
+				eye: [ 0, 300, 1800 ],
+				up: [ 0, 1, 0 ],
+				fov: 30,
+				angle : 0,
+				rotation: 33.75
+			},
+
+			{ 
+				left: 0,
+				bottom: 0,
+				width: 0.5,
+				height: 0.5,
+				background: { r: 0.0, g: 0.0, b: 0.0, a: 1 },
+				eye: [ 0, 300, 1800 ],
+				up: [ 0, 1, 0 ],
+				fov: 30,
+				angle: 90,
+				rotation: 101.25
+			},
+			{ 
+				left: 0.5,
+				bottom: 0,
+				width: 0.5,
+				height: 0.5,
+				background: { r: 0.0, g: 0.0, b: 0.0, a: 1 },
+				eye: [ 0, 300, 1800 ],
+				up: [ 0, 1, 0 ],
+				fov: 30,
+				angle: 180,
+				rotation: -101.25
+			},
+			{ 
+				left: 0.5,
+				bottom: 0.5,
+				width: 0.5,
+				height: 0.5,
+				background: { r: 0.0, g: 0.0, b: 0.0, a: 1 },
+				eye: [ 0, 300, 1800 ],
+				up: [ 0, 1, 0 ],
+				fov: 30,
+				angle: 270,
+				rotation: 101.25
+			}
+		];
+
+        var container = document.getElementById( 'container' );
+        var containerHeight = window.innerHeight;
+        var containerWidth  = window.innerHeight;
+        container.setAttribute("style","width:" + containerWidth + "px"); 
+        document.body.appendChild( container );
+
+        //create scene
+        var scene = new THREE.Scene();  
+
+        var renderer = new THREE.WebGLRenderer();
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement); 
+
+        var effect = new THREE.AnaglyphEffect( renderer );
+        effect.setSize( containerWidth || 2, containerHeight || 2);
+
+        //add cameras
+        for (var i =  0; i < views.length; i++ ) {
+        //for (var i =  0; i < 1; i++ ) {
+                var view = views[i];
+                var camera = new THREE.PerspectiveCamera( view.fov, containerWidth / containerHeight, 1, 10000 );
+                camera.position.x = view.eye[ 0 ];
+                camera.position.y = view.eye[ 1 ];
+                camera.position.z = view.eye[ 2 ];
+                camera.up.x = view.up[ 0 ];
+                camera.up.y = view.up[ 1 ];
+                camera.up.z = view.up[ 2 ];
+                view.camera = camera;
+        }
+
+		//cube
+        var geometry = new THREE.BoxGeometry(containerHeight/16, containerHeight/16, containerHeight/16);
+
+        var texture = THREE.ImageUtils.loadTexture( 'crate.gif' );
+		texture.anisotropy = renderer.getMaxAnisotropy();
+		var material = new THREE.MeshBasicMaterial( { map: texture } );
+     
+        cube = new THREE.Mesh( geometry, material );
+		scene.add(cube);
+		
+		//initite variables
+		var firstValidFrame = null
+		var cameraRadius = 290
+		var rotateY = 90, rotateX = 0, curY = 0
+		
+      
+		//render scene
+		render();
+		
+		//request animation frame and connect to leap socket
+		Leap.loop( function( frame ) {
+	       var hand, direction, len;
+	       if (frame.hands.length > 0) {
+	         hand = frame.hands[0];
+	         cube.rotation.z = hand.roll();
+	         cube.rotation.x = hand.pitch();
+	         cube.rotation.y = hand.yaw();
+	       }
+	     });
+
+/************************************************/
+/* IF NO LEAP FOUND, USE MOUSE */
+/************************************************/
+var isDragging = false;
+var previousMousePosition = {
+    x: 0,
+    y: 0
+};
+$(renderer.domElement).on('mousedown', function(e) {
+    isDragging = true;
+})
+.on('mousemove', function(e) {
+    //console.log(e);
+    var deltaMove = {
+        x: e.offsetX-previousMousePosition.x,
+        y: e.offsetY-previousMousePosition.y
+    };
+
+    if(isDragging) {
+        var deltaRotationQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(deltaMove.y * (Math.PI/180),deltaMove.x * (Math.PI/180),0,'XYZ'));
+        cube.quaternion.multiplyQuaternions(deltaRotationQuaternion, cube.quaternion);
+    }
+    
+    previousMousePosition = {
+        x: e.offsetX,
+        y: e.offsetY
+    };
+});
+
+$(document).on('mouseup', function(e) {
+    isDragging = false;
+});
+/************************************************/
+
+	
+		
+		function render(){      
+			//animation loop
+			requestAnimationFrame( render );
+			
+			//render
+			for (var i =  0; i < views.length; i++ ) {
+			//for (var i =  0; i < 1; i++ ) {
+				var view = views[i];
+				var camera = view.camera;
+
+ 				cube.rotation.x += 0.005;
+				cube.rotation.y += 0.005;
+
+				//adjust 3D spherical coordinates of the camera
+				camera.position.x = cube.position.x + cameraRadius * Math.sin(rotateY * Math.PI/180) * Math.cos(view.angle * Math.PI/180)
+				camera.position.z = cube.position.y + cameraRadius * Math.sin(rotateY * Math.PI/180) * Math.sin(view.angle * Math.PI/180)
+				camera.position.y = cube.position.z + cameraRadius * Math.cos(rotateY * Math.PI/180)
+				camera.lookAt(scene.position)
+				camera.rotation.z= view.rotation  - Math.PI;
+				
+				// //viewports
+				var left   = Math.floor( containerWidth  * view.left );
+				var bottom = Math.floor( containerHeight * view.bottom );
+				var width  = Math.floor( containerWidth  * view.width );
+				var height = Math.floor( containerHeight * view.height );
+				renderer.setViewport( left, bottom, width, height);
+				renderer.setScissor( left, bottom, width, height);
+				renderer.enableScissorTest ( true );
+				renderer.setClearColor( view.background, view.background.a );
+				
+				//renderer.render(scene, camera);
+				effect.render(scene, camera);
+					
+			}
+		}
+    </script>
+    <!--<p>+</p>-->
+  </body>
+</html>
